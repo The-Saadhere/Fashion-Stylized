@@ -3,6 +3,7 @@ import { Geist, Geist_Mono,Inter,Cormorant_Garamond } from "next/font/google";
 import "./globals.css";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
+import { AuthProvider } from "./context/AuthProvider";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -43,9 +44,12 @@ export default function RootLayout({
       className={` h-full antialiased bg-white  ${geistSans.variable} ${inter.variable} ${cormorantGaramond.variable} ${geistMono.variable}`}
     >
       <body  className={`min-h-full flex flex-col  ${inter.className}`}>
+        <AuthProvider>
+
         <Navbar />
 {children}
 <Footer />
+        </AuthProvider>
 </body>
     </html>
   );

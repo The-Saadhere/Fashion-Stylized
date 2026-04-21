@@ -5,6 +5,9 @@ export interface IUser {
     email: string;
     password?: string | null; // Password can be null for users authenticated via Google
     role?: 'user' | 'admin';
+    isVerified?: boolean; // For email verification
+    otp?: string | null; // For password reset or email verification
+    otpExpiry?: Date | null; // Expiry time for OTP
     provider?: 'local' | 'google';      // Track auth provider
     googleId?: string;                  
     orders?: [string];
@@ -18,6 +21,9 @@ const userSchema = new mongoose.Schema<IUser>({
     email: { type: String, required: true, unique: true },
     provider: { type: String, enum: ['local', 'google'], default: 'local' },
     googleId: { type: String, unique: true, sparse: true },
+    otp: { type: String, default: null },
+    otpExpiry: { type: Date, default: null },
+    isVerified: { type: Boolean, default: false },
     password: { type: String, required: false },
     role: { type: String, enum: ['user', 'admin'], default: 'user' },
     orders: [{ type: String }]
