@@ -65,7 +65,8 @@ export const authOptions: NextAuthOptions = {
                     },
                         {
                             $set: {
-                                googleId: profile?.sub
+                                googleId: profile?.sub,
+                                isVerified: true,
                             }
                         }
                     )
@@ -78,7 +79,8 @@ export const authOptions: NextAuthOptions = {
                                 name: user.name,
                                 email: user.email,
                                 provider: "google",
-                                googleId: profile?.sub
+                                googleId: profile?.sub,
+                                isVerified: true
                             }
                         },
                         { upsert: true, new: true}

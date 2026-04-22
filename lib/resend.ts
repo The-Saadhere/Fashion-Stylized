@@ -12,7 +12,7 @@ type SendOTPEmailParams = {
 export async function sendOTPEmail({email, username,otp}: SendOTPEmailParams){
     try {
           const { data, error } = await resend.emails.send({
-      from: 'YourApp <onboarding@resend.dev>', // change in production
+      from: 'Fashion Stylized <noreply@fashionstylized.store>', // change in production
       to: [email],
       subject: 'Your Verification Code',
       react: VerificationEmail({ username, otp }),

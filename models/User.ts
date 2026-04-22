@@ -20,7 +20,7 @@ const userSchema = new mongoose.Schema<IUser>({
     name: { type: String, required: true },
     email: { type: String, required: true, unique: true },
     provider: { type: String, enum: ['local', 'google'], default: 'local' },
-    googleId: { type: String, unique: true, sparse: true },
+    googleId: { type: String, unique: true, sparse: true, required: false },
     otp: { type: String, default: null },
     otpExpiry: { type: Date, default: null },
     isVerified: { type: Boolean, default: false },
