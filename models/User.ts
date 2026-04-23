@@ -8,6 +8,7 @@ export interface IUser {
     isVerified?: boolean; // For email verification
     otp?: string | null; // For password reset or email verification
     otpExpiry?: Date | null; // Expiry time for OTP
+    passwordResetVerified?: boolean; // To track if password reset OTP is verified
     provider?: 'local' | 'google';      // Track auth provider
     googleId?: string;                  
     orders?: [string];
@@ -23,6 +24,7 @@ const userSchema = new mongoose.Schema<IUser>({
     googleId: { type: String, unique: true, sparse: true, required: false },
     otp: { type: String, default: null },
     otpExpiry: { type: Date, default: null },
+    passwordResetVerified: { type: Boolean, default: false },
     isVerified: { type: Boolean, default: false },
     password: { type: String, required: false },
     role: { type: String, enum: ['user', 'admin'], default: 'user' },
