@@ -4,6 +4,7 @@ import Image from "next/image"
 import Link from "next/link"
 import { Mail,Lock } from 'lucide-react'
 import { motion } from "framer-motion";
+import { signIn } from 'next-auth/react'
 
 const SignIn = () => {
   const [email, setEmail] = useState("");
@@ -69,7 +70,7 @@ const SignIn = () => {
             </span>
           </div>
         </div>
-        <button className='py-3 border cursor-pointer border-white/20 hover:border-white transition-colors text-white text-sm uppercase tracking-wider w-full'>Google</button>
+        <button onClick={()=>signIn("google")} className='py-3 border cursor-pointer border-white/20 hover:border-white transition-colors text-white text-sm uppercase tracking-wider w-full'>Google</button>
         <p className='text-center text-white/60 text-sm'>Don't have an account? <Link href="/signUp" className='text-white hover:underline' >Sign up</Link></p>
       </motion.div>
        </div>
