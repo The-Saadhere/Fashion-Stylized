@@ -1,8 +1,14 @@
 @import "tailwindcss";
 
 :root {
+ --font-size: 16px;
+    --font-sans: "Outfit", sans-serif;
     --background: #0a0a0a;
     --foreground: #f5f5f0;
+    --card: #141414;
+    --card-foreground: #f5f5f0;
+    --popover: #1a1a1a;
+    --popover-foreground: #f5f5f0;
     --primary: #d4af37;
     --primary-foreground: #0a0a0a;
     --secondary: #1a1a1a;
@@ -10,6 +16,30 @@
     --muted: #2a2a2a;
     --muted-foreground: #a0a0a0;
     --accent: #d4af37;
+    --accent-foreground: #0a0a0a;
+    --destructive: #d4183d;
+    --destructive-foreground: #fff;
+    --border: #d4af3726;
+    --input: transparent;
+    --input-background: #1a1a1a;
+    --switch-background: #2a2a2a;
+    --font-weight-medium: 500;
+    --font-weight-normal: 400;
+    --ring: #d4af374d;
+    --chart-1: oklch(64.6% .222 41.116);
+    --chart-2: oklch(60% .118 184.704);
+    --chart-3: oklch(39.8% .07 227.392);
+    --chart-4: oklch(82.8% .189 84.429);
+    --chart-5: oklch(76.9% .188 70.08);
+    --radius: 0;
+    --sidebar: #141414;
+    --sidebar-foreground: #f5f5f0;
+    --sidebar-primary: #d4af37;
+    --sidebar-primary-foreground: #0a0a0a;
+    --sidebar-accent: #1a1a1a;
+    --sidebar-accent-foreground: #f5f5f0;
+    --sidebar-border: #d4af3726;
+    --sidebar-ring: #d4af374d;;
   }
 
 @theme inline {
