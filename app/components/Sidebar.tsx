@@ -50,6 +50,7 @@ const Sidebar = ({ isOpen, onClose }: Props) => {
                   {["Watches", "Glasses", "Wallets", "Collections", "About"].map(
                     (item, i) => (
                    <MotionLink
+                   key={item}
   href="/signIn"
   initial={{ opacity: 0, x: 30 }}
   animate={{ opacity: 1, x: 0 }}
@@ -72,6 +73,7 @@ const Sidebar = ({ isOpen, onClose }: Props) => {
                     {["My Account", "Orders", "Wishlist", "Settings"].map(
                       (item, i) => (
                        <MotionLink
+                       key={item}
   href="/signIn"
   initial={{ opacity: 0, x: 30 }}
   animate={{ opacity: 1, x: 0 }}
