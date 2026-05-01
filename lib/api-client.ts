@@ -69,6 +69,10 @@ async resetPassword(data: { userId: string; newPassword: string }) {
         body: data
     })
 }
+async getTrendingProducts() {
+    return this.fetch<{ success: boolean; error?: string, data?: any }>("/products?trending=true&limit=9")
+}
+
 }
 
 
