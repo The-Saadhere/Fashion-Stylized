@@ -7,7 +7,7 @@ export interface IProduct {
     keyFeatures: string[];
     images: string[];
     _id?: mongoose.Types.ObjectId;
-    stock?: number;
+    stock: number;
     category: string;
     subcategory?: string;
     isTrending?: boolean;

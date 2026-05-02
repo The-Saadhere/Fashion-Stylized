@@ -8,15 +8,8 @@ import { IProduct } from '@/models/Product'
 import { useCartStore } from '@/app/store/cartStore'
 import Link from 'next/link'
 
-const subcategories = ["All", "Leather", "Minimal", "Travel"]
-const sortOptions = [
-  { label: "Default", value: "default" },
-  { label: "Price: Low to High", value: "asc" },
-  { label: "Price: High to Low", value: "desc" },
-]
-
-const Wallet = () => {
-  const [wallets, setWallets] = useState<IProduct[]>([])
+const Watch = () => {
+  const [watches, setWatches] = useState<IProduct[]>([])
   const [filtered, setFiltered] = useState<IProduct[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -24,13 +17,20 @@ const Wallet = () => {
   const [activeSort, setActiveSort] = useState("default")
   const { addItem } = useCartStore()
 
+const subcategories = ["All", "Digital", "Luxury", "Casual", ]
+const sortOptions = [
+  { label: "Default", value: "default" },
+  { label: "Price: Low to High", value: "asc" },
+  { label: "Price: High to Low", value: "desc" },
+]
+
   useEffect(() => {
     async function getData() {
       try {
         setLoading(true)
-        const res = await apiClient.getProductsByCategory("wallet")
+        const res = await apiClient.getProductsByCategory("watch")
         if (res.success) {
-          setWallets(res.data || [])
+          setWatches(res.data || [])
           setFiltered(res.data || [])
         } else {
           setError(res.error || "Failed to fetch products")
@@ -44,27 +44,27 @@ const Wallet = () => {
     getData()
   }, [])
 
-  // filter + sort
-  useEffect(() => {
-    let result = [...wallets]
-
-    // subcategory filter
-    if (activeSubcategory !== "All") {
-      result = result.filter(p =>
-        (p as any).subcategory?.toLowerCase() === activeSubcategory.toLowerCase()
-      )
-    }
-
-    // sort
-    if (activeSort === "asc") result.sort((a, b) => a.price - b.price)
-    if (activeSort === "desc") result.sort((a, b) => b.price - a.price)
-
-    setFiltered(result)
-  }, [wallets, activeSubcategory, activeSort])
+     // filter + sort
+     useEffect(() => {
+       let result = [...watches]
+   
+       // subcategory filter
+       if (activeSubcategory !== "All") {
+         result = result.filter(p =>
+           (p as any).subcategory?.toLowerCase() === activeSubcategory.toLowerCase()
+         )
+       }
+   
+       // sort
+       if (activeSort === "asc") result.sort((a, b) => a.price - b.price)
+       if (activeSort === "desc") result.sort((a, b) => b.price - a.price)
+   
+       setFiltered(result)
+     }, [watches, activeSubcategory, activeSort])
 
   return (
-    <>
-      {/* ── Hero ── */}
+<>
+  {/* ── Hero ── */}
       <section className="relative h-[50vh] flex items-center justify-center overflow-hidden">
         <div className="absolute inset-0">
           <motion.div
@@ -74,10 +74,10 @@ const Wallet = () => {
             className="w-full h-full">
             <Image
               urlEndpoint='https://ik.imagekit.io/fashionstylized'
-              alt="Wallet bg"
+              alt="Watch bg"
               fill={true}
               className='w-full h-full object-cover opacity-40'
-              src="photo-1772651983030-565c2b7be181.jpg"
+              src="photo-1772857455349-29e6e3698d90.jpg"
             />
           </motion.div>
           <div className="absolute inset-0 bg-gradient-to-t from-background via-background/60 to-transparent" />
@@ -96,7 +96,7 @@ const Wallet = () => {
             Our Collection
           </motion.p>
           <h2 className='text-6xl lg:text-7xl mb-4 font-cormorant-garamond'>
-            Leather Goods
+            Timepieces
           </h2>
           <motion.div
             initial={{ width: 0 }}
@@ -105,113 +105,112 @@ const Wallet = () => {
             className="h-[1px] bg-(--primary) mx-auto mb-4"
           />
           <p className="text-lg text-(--muted-foreground) max-w-2xl mx-auto tracking-wide">
-            Crafted elegance for everyday essentials
+            Swiss precision meets timeless elegance
           </p>
         </motion.div>
       </section>
-
-      {/* ── Filters ── */}
-      <section className="max-w-[1600px] mx-auto px-6 lg:px-12 py-12">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.3 }}
-          className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-12 pb-6 border-b border-(--border) gap-4">
-
-          {/* subcategory pills */}
-          <div className='flex flex-wrap items-center gap-3'>
-            <Funnel className='w-4 h-4 text-(--muted-foreground)' />
-            {subcategories.map((sub) => (
-              <motion.button
-                key={sub}
-                onClick={() => setActiveSubcategory(sub)}
-                whileHover={{ scale: 1.03 }}
-                whileTap={{ scale: 0.97 }}
-                className={`px-5 py-2 uppercase text-xs tracking-wider border transition-all duration-300 ${
-                  activeSubcategory === sub
-                    ? "bg-(--primary) text-(--primary-foreground) border-(--primary)"
-                    : "border-(--border) text-(--muted-foreground) hover:border-(--primary) hover:text-foreground"
-                }`}>
-                {sub}
-              </motion.button>
-            ))}
-          </div>
-
-          {/* sort + results count */}
-          <div className="flex items-center gap-4">
-            {!loading && !error && (
-              <p className="text-xs uppercase tracking-widest text-(--muted-foreground)">
-                {filtered.length} {filtered.length === 1 ? "item" : "items"}
-              </p>
-            )}
-            <select
-              value={activeSort}
-              onChange={(e) => setActiveSort(e.target.value)}
-              className='bg-(--secondary) px-4 py-2 border border-(--border) focus:border-(--primary) outline-none text-sm uppercase tracking-wider cursor-pointer'>
-              {sortOptions.map(opt => (
-                <option key={opt.value} value={opt.value}>{opt.label}</option>
-              ))}
-            </select>
-          </div>
-        </motion.div>
-
-        {/* ── Loading skeleton ── */}
-        {loading && (
-          <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8'>
-            {[...Array(6)].map((_, i) => (
-              <div key={i} className="animate-pulse">
-                <div className="aspect-[3/4] bg-white/10 mb-4" />
-                <div className="h-5 bg-white/10 mb-2 w-3/4" />
-                <div className="h-4 bg-white/10 w-1/4" />
+     {/* ── Filters ── */}
+          <section className="max-w-[1600px] mx-auto px-6 lg:px-12 py-12">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.3 }}
+              className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-12 pb-6 border-b border-(--border) gap-4">
+    
+              {/* subcategory pills */}
+              <div className='flex flex-wrap items-center gap-3'>
+                <Funnel className='w-4 h-4 text-(--muted-foreground)' />
+                {subcategories.map((sub) => (
+                  <motion.button
+                    key={sub}
+                    onClick={() => setActiveSubcategory(sub)}
+                    whileHover={{ scale: 1.03 }}
+                    whileTap={{ scale: 0.97 }}
+                    className={`px-5 py-2 uppercase text-xs tracking-wider border transition-all duration-300 ${
+                      activeSubcategory === sub
+                        ? "bg-(--primary) text-(--primary-foreground) border-(--primary)"
+                        : "border-(--border) text-(--muted-foreground) hover:border-(--primary) hover:text-foreground"
+                    }`}>
+                    {sub}
+                  </motion.button>
+                ))}
               </div>
-            ))}
-          </div>
-        )}
-
-        {/* ── Error ── */}
-        {!loading && error && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="flex flex-col items-center justify-center py-32 gap-4 text-center">
-            <AlertCircle className="w-12 h-12 text-red-400" />
-            <p className="text-red-400 text-xl">Failed to load products</p>
-            <p className="text-(--muted-foreground) text-sm">{error}</p>
-            <motion.button
-              whileHover={{ scale: 1.03 }}
-              whileTap={{ scale: 0.97 }}
-              onClick={() => window.location.reload()}
-              className="mt-2 px-8 py-3 border border-(--border) hover:border-(--primary) uppercase text-sm tracking-wider transition-colors">
-              Try Again
-            </motion.button>
-          </motion.div>
-        )}
-
-        {/* ── Empty state ── */}
-        {!loading && !error && filtered.length === 0 && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="flex flex-col items-center justify-center py-32 gap-3 text-center">
-            <p className="text-3xl font-cormorant-garamond">No wallets found</p>
-            <p className="text-(--muted-foreground) text-sm">Try a different filter</p>
-            <motion.button
-              whileHover={{ scale: 1.03 }}
-              whileTap={{ scale: 0.97 }}
-              onClick={() => { setActiveSubcategory("All"); setActiveSort("default") }}
-              className="mt-4 px-8 py-3 border border-(--primary) text-(--primary) uppercase text-sm tracking-wider hover:bg-(--primary) hover:text-(--primary-foreground) transition-colors">
-              Clear Filters
-            </motion.button>
-          </motion.div>
-        )}
-
-        {/* ── Product grid ── */}
-        {!loading && !error && filtered.length > 0 && (
-          <motion.div
-            layout
-            className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8'>
-            <AnimatePresence mode="popLayout">
-             // replace your product card with this
+    
+              {/* sort + results count */}
+              <div className="flex items-center gap-4">
+                {!loading && !error && (
+                  <p className="text-xs uppercase tracking-widest text-(--muted-foreground)">
+                    {filtered.length} {filtered.length === 1 ? "item" : "items"}
+                  </p>
+                )}
+                <select
+                  value={activeSort}
+                  onChange={(e) => setActiveSort(e.target.value)}
+                  className='bg-(--secondary) px-4 py-2 border border-(--border) focus:border-(--primary) outline-none text-sm uppercase tracking-wider cursor-pointer'>
+                  {sortOptions.map(opt => (
+                    <option key={opt.value} value={opt.value}>{opt.label}</option>
+                  ))}
+                </select>
+              </div>
+            </motion.div>
+    
+            {/* ── Loading skeleton ── */}
+            {loading && (
+              <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8'>
+                {[...Array(6)].map((_, i) => (
+                  <div key={i} className="animate-pulse">
+                    <div className="aspect-[3/4] bg-white/10 mb-4" />
+                    <div className="h-5 bg-white/10 mb-2 w-3/4" />
+                    <div className="h-4 bg-white/10 w-1/4" />
+                  </div>
+                ))}
+              </div>
+            )}
+    
+            {/* ── Error ── */}
+            {!loading && error && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="flex flex-col items-center justify-center py-32 gap-4 text-center">
+                <AlertCircle className="w-12 h-12 text-red-400" />
+                <p className="text-red-400 text-xl">Failed to load products</p>
+                <p className="text-(--muted-foreground) text-sm">{error}</p>
+                <motion.button
+                  whileHover={{ scale: 1.03 }}
+                  whileTap={{ scale: 0.97 }}
+                  onClick={() => window.location.reload()}
+                  className="mt-2 px-8 py-3 border border-(--border) hover:border-(--primary) uppercase text-sm tracking-wider transition-colors">
+                  Try Again
+                </motion.button>
+              </motion.div>
+            )}
+    
+            {/* ── Empty state ── */}
+            {!loading && !error && filtered.length === 0 && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="flex flex-col items-center justify-center py-32 gap-3 text-center">
+                <p className="text-3xl font-cormorant-garamond">No watches found</p>
+                <p className="text-(--muted-foreground) text-sm">Try a different filter</p>
+                <motion.button
+                  whileHover={{ scale: 1.03 }}
+                  whileTap={{ scale: 0.97 }}
+                  onClick={() => { setActiveSubcategory("All"); setActiveSort("default") }}
+                  className="mt-4 px-8 py-3 border border-(--primary) text-(--primary) uppercase text-sm tracking-wider hover:bg-(--primary) hover:text-(--primary-foreground) transition-colors">
+                  Clear Filters
+                </motion.button>
+              </motion.div>
+            )}
+    
+            {/* ── Product grid ── */}
+            {!loading && !error && filtered.length > 0 && (
+              <motion.div
+                layout
+                className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8'>
+                <AnimatePresence mode="popLayout">
+                  // replace your product card with this
 {filtered.map((item, index) => (
   <motion.div
     key={item._id} // ✅ use _id not index
@@ -316,12 +315,12 @@ const Wallet = () => {
 
   </motion.div>
 ))}
-            </AnimatePresence>
-          </motion.div>
-        )}
-      </section>
-    </>
-  )
+                </AnimatePresence>
+              </motion.div>
+            )}
+          </section>
+</> 
+ )
 }
 
-export default Wallet
+export default Watch
