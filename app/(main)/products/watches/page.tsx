@@ -80,7 +80,7 @@ const sortOptions = [
               src="photo-1772857455349-29e6e3698d90.jpg"
             />
           </motion.div>
-          <div className="absolute inset-0 bg-gradient-to-t from-background via-background/60 to-transparent" />
+          <div className="absolute inset-0 bg-linear-to-t from-background via-background/60 to-transparent" />
         </div>
 
         <motion.div
@@ -102,7 +102,7 @@ const sortOptions = [
             initial={{ width: 0 }}
             animate={{ width: 96 }}
             transition={{ duration: 0.8, delay: 0.4 }}
-            className="h-[1px] bg-(--primary) mx-auto mb-4"
+            className="h-px bg-(--primary) mx-auto mb-4"
           />
           <p className="text-lg text-(--muted-foreground) max-w-2xl mx-auto tracking-wide">
             Swiss precision meets timeless elegance
@@ -110,7 +110,7 @@ const sortOptions = [
         </motion.div>
       </section>
      {/* ── Filters ── */}
-          <section className="max-w-[1600px] mx-auto px-6 lg:px-12 py-12">
+          <section className="max-w-400 mx-auto px-6 lg:px-12 py-12">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -159,7 +159,7 @@ const sortOptions = [
               <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8'>
                 {[...Array(6)].map((_, i) => (
                   <div key={i} className="animate-pulse">
-                    <div className="aspect-[3/4] bg-white/10 mb-4" />
+                    <div className="aspect-3/4 bg-white/10 mb-4" />
                     <div className="h-5 bg-white/10 mb-2 w-3/4" />
                     <div className="h-4 bg-white/10 w-1/4" />
                   </div>
@@ -213,7 +213,7 @@ const sortOptions = [
                   // replace your product card with this
 {filtered.map((item, index) => (
   <motion.div
-    key={item._id} // ✅ use _id not index
+   key={item._id?.toString()} // ✅ use _id not index
     layout
     initial={{ opacity: 0, y: 40 }}
     animate={{ opacity: 1, y: 0 }}
@@ -223,7 +223,7 @@ const sortOptions = [
 
     {/* image wrapper — whole thing is a link on mobile */}
     <Link href={`/products/${item._id}`}>
-      <div className="relative overflow-hidden aspect-[3/4] mb-6 bg-secondary">
+      <div className="relative overflow-hidden aspect-3/4 mb-6 bg-secondary">
         <Image
           urlEndpoint='https://ik.imagekit.io/fashionstylized'
           alt={item.title}
@@ -240,7 +240,7 @@ const sortOptions = [
             onClick={(e) => {
               e.preventDefault() // ✅ prevent link navigation when clicking button
               addItem({
-                id: item._id as string,
+                id: item._id ? item._id.toString() : '',
                 title: item.title,
                 price: item.price,
                 image: item.images?.[0] || "/home.jpg",
@@ -300,7 +300,7 @@ const sortOptions = [
     <motion.button
       whileTap={{ scale: 0.97 }}
       onClick={() => addItem({
-        id: item._id as string,
+        id: item._id ? item._id.toString() : '',
         title: item.title,
         price: item.price,
         image: item.images?.[0] || "/home.jpg",

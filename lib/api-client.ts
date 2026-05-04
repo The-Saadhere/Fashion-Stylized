@@ -87,6 +87,12 @@ async getProductsByCategory(category: string) {
         `/categories?category=${category}`
     )
 }
+
+async getProducts() {
+    return this.fetch<{ success: boolean; data?: IProduct[]; error?: string }>(
+        `/products`
+    )
+}
 }
 
 

@@ -16,6 +16,8 @@ const NewArrival = () => {
   const [activeFilter, setActiveFilter] = useState("All")
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState("")
+  const { addItem } = useCartStore()
+  
 
   useEffect(() => {
     async function getData() {
@@ -56,7 +58,7 @@ const NewArrival = () => {
   }
 
   return (
-    <section className='py-24 px-6 lg:px-12 max-w-[1600px] mx-auto'>
+    <section className='py-24 px-6 lg:px-12 max-w-400 mx-auto'>
 
       {/* heading + filters */}
       <motion.div
@@ -73,7 +75,7 @@ const NewArrival = () => {
             whileInView={{ width: 96 }}
             viewport={{ once: true }}
             transition={{ duration: 0.8, delay: 0.3, ease: "easeOut" }}
-            className='h-[1px] bg-(--primary)'
+            className='h-px bg-(--primary)'
           />
         </div>
 
@@ -101,7 +103,7 @@ const NewArrival = () => {
         <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8'>
           {[...Array(6)].map((_, i) => (
             <div key={i} className="animate-pulse">
-              <div className="aspect-[3/4] bg-white/10 mb-6" />
+              <div className="aspect-3/4 bg-white/10 mb-6" />
               <div className="h-6 bg-white/10 mb-2 w-3/4" />
               <div className="h-4 bg-white/10 w-1/4" />
             </div>
@@ -145,7 +147,7 @@ const NewArrival = () => {
             // replace your product card with this
 {filtered.map((item, index) => (
   <motion.div
-    key={item._id} // ✅ use _id not index
+   key={item._id?.toString()} // ✅ use _id not index
     layout
     initial={{ opacity: 0, y: 40 }}
     animate={{ opacity: 1, y: 0 }}
@@ -155,7 +157,7 @@ const NewArrival = () => {
 
     {/* image wrapper — whole thing is a link on mobile */}
     <Link href={`/products/${item._id}`}>
-      <div className="relative overflow-hidden aspect-[3/4] mb-6 bg-secondary">
+      <div className="relative overflow-hidden aspect-3/4 mb-6 bg-secondary">
         <Image
           urlEndpoint='https://ik.imagekit.io/fashionstylized'
           alt={item.title}
@@ -172,7 +174,7 @@ const NewArrival = () => {
             onClick={(e) => {
               e.preventDefault() // ✅ prevent link navigation when clicking button
               addItem({
-                id: item._id as string,
+                id: item._id ? item._id.toString() : '',
                 title: item.title,
                 price: item.price,
                 image: item.images?.[0] || "/home.jpg",
@@ -232,7 +234,7 @@ const NewArrival = () => {
     <motion.button
       whileTap={{ scale: 0.97 }}
       onClick={() => addItem({
-        id: item._id as string,
+        id: item._id ? item._id.toString() : '',
         title: item.title,
         price: item.price,
         image: item.images?.[0] || "/home.jpg",
