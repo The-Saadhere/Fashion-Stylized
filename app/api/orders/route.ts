@@ -5,7 +5,23 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { sendOrderNotificationEmail, sendOrderConfirmationEmail } from "@/lib/resend"
 import Setting from "@/models/Setting"
+import Product from "@/models/Product"
+import { z } from "zod"
 
+const createOrderSchema = z.object({
+  name: z.string().trim().min(1),
+  email: z.string().trim().min(1),
+  products: z.array(z.object({
+    productId: z.string().regex(/^[a-f\d]{24}$/i),
+    quantity: z.number().int().positive(),
+    color: z.string().optional(),
+  })).min(1),
+  address: z.string().trim().min(1),
+  city: z.string().trim().min(1),
+  postalCode: z.string().optional(),
+  mobileNumber: z.string().trim().min(1),
+  paymentMethod: z.enum(["COD", "online"]).optional(),
+})
 
 export const dynamic = "force-dynamic"
 export async function POST(request: NextRequest) {
@@ -14,39 +30,65 @@ export async function POST(request: NextRequest) {
 
     const session = await getServerSession(authOptions);
 
+    const parsed = createOrderSchema.safeParse(await request.json());
+    if (!parsed.success) {
+      return NextResponse.json({
+        success: false,
+        error: "Invalid order details"
+      }, { status: 400 });
+    }
+
     const {
       name,
       email,
-      products,
+      products: requestedProducts,
       address,
       city,
       postalCode,
       mobileNumber,
       paymentMethod,
-    } = await request.json();
+    } = parsed.data;
 
-    // validate required fields
-    if (!name || !email || !products || !address || !city || !mobileNumber) {
-      return NextResponse.json({
-        success: false,
-        error: "All fields are required"
-      }, { status: 400 });
+    const productIds = [...new Set(requestedProducts.map((item) => item.productId))];
+    const catalogProducts = await Product.find({ _id: { $in: productIds } })
+      .select("_id title price images category")
+      .lean();
+    const productsById = new Map(
+      catalogProducts.map((product) => [product._id.toString(), product])
+    );
+
+    const products = [];
+    for (const item of requestedProducts) {
+      const product = productsById.get(item.productId.toLowerCase());
+      if (!product) {
+        return NextResponse.json({
+          success: false,
+          error: "One or more products are no longer available"
+        }, { status: 400 });
+      }
+
+      products.push({
+        productId: product._id,
+        title: product.title,
+        price: product.price,
+        image: product.images?.[0] || "",
+        category: product.category,
+        quantity: item.quantity,
+        color: item.color,
+      });
     }
 
-    if (!products || products.length === 0) {
+    if (products.some((product) => !Number.isFinite(product.price) || product.price < 0)) {
+      console.error("Cannot create order with an invalid catalog product price");
       return NextResponse.json({
         success: false,
-        error: "Cart is empty"
-      }, { status: 400 });
+        error: "Unable to verify product pricing"
+      }, { status: 500 });
     }
 
     const setting = await Setting.findOne().lean()
     const deliveryFee = setting?.deliveryFee ?? 300
-    // ✅ calculate total on server — never trust client
-    const subtotal = products.reduce(
-      (sum: number, item: { price: number; quantity: number }) =>
-        sum + item.price * item.quantity, 0
-    );
+    const subtotal = products.reduce((sum, item) => sum + item.price * item.quantity, 0);
     const totalAmount = subtotal + deliveryFee;
 
     const newOrder = new Order({
@@ -76,7 +118,7 @@ export async function POST(request: NextRequest) {
       address,
       shippingFee: deliveryFee,
       paymentMethod: paymentMethod || "COD",
-      products: products.map((p: any) => ({
+      products: products.map((p) => ({
         title: p.title,
         quantity: p.quantity,
         price: p.price,
@@ -89,7 +131,7 @@ export async function POST(request: NextRequest) {
       customerName: name,
       customerEmail: email,
       orderId: savedOrder._id.toString(),
-      products: products.map((p: any) => ({
+      products: products.map((p) => ({
         title: p.title,
         quantity: p.quantity,
         price: p.price,
