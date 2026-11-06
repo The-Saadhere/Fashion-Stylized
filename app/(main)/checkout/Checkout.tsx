@@ -8,6 +8,7 @@ import { useSession } from "next-auth/react"
 import { motion, AnimatePresence } from "framer-motion"
 import { Image } from "@imagekit/next"
 import { apiClient } from "@/lib/api-client"
+import { getProductPrice } from "@/lib/product-pricing"
 import { Loader2, AlertCircle, CheckCircle2, ShoppingBag, Shield } from "lucide-react"
 import Link from "next/link"
 import CheckoutAuthModal from "@/app/components/checkout/CheckoutAuthModal"
@@ -139,13 +140,14 @@ export default function Checkout() {
           }
 
           // price changed
-          if (liveProduct.price !== item.price) {
-            warnings.push(`"${liveProduct.title}" price updated from Rs.${item.price.toLocaleString()} to Rs.${liveProduct.price.toLocaleString()}`)
+          const livePrice = getProductPrice(liveProduct)
+          if (livePrice !== item.price) {
+            warnings.push(`"${liveProduct.title}" price updated from Rs.${item.price.toLocaleString()} to Rs.${livePrice.toLocaleString()}`)
           }
 
           validatedItems.push({
             ...item,
-            price: liveProduct.price,      // ✅ always live price
+            price: livePrice,
             title: liveProduct.title,       // ✅ always live title
             image: liveProduct.images?.[0] || item.image,
             quantity: finalQuantity,

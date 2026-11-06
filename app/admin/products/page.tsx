@@ -226,7 +226,16 @@ export default function AdminProductsPage() {
 
                       {/* price */}
                       <td className="px-4 py-3 text-(--primary) font-cormorant-garamond text-base">
-                        Rs. {product.price.toLocaleString()}
+                        {product.discountPrice && product.discountPrice < product.price ? (
+                          <span className="flex flex-col">
+                            <span>Rs. {product.discountPrice.toLocaleString()}</span>
+                            <span className="text-xs text-(--muted-foreground) line-through">
+                              Rs. {product.price.toLocaleString()}
+                            </span>
+                          </span>
+                        ) : (
+                          `Rs. ${product.price.toLocaleString()}`
+                        )}
                       </td>
 
                       {/* stock */}
@@ -332,7 +341,16 @@ export default function AdminProductsPage() {
                   <p className="text-xs text-(--muted-foreground) uppercase mt-0.5">{product.category}</p>
                   <div className="flex items-center justify-between mt-2 flex-wrap gap-2">
                     <p className="text-(--primary) font-cormorant-garamond">
-                      Rs. {product.price.toLocaleString()}
+                      {product.discountPrice && product.discountPrice < product.price ? (
+                        <>
+                          Rs. {product.discountPrice.toLocaleString()}
+                          <span className="ml-2 text-xs text-(--muted-foreground) line-through">
+                            Rs. {product.price.toLocaleString()}
+                          </span>
+                        </>
+                      ) : (
+                        `Rs. ${product.price.toLocaleString()}`
+                      )}
                     </p>
                     <span className={`text-xs px-2 py-0.5 border ${
                       product.stock === 0

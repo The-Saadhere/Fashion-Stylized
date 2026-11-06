@@ -62,6 +62,7 @@ export default function EditProductPage() {
           title: product.title,
           description: product.description,
           price: product.price,
+          discountPrice: product.discountPrice ?? "",
           category: product.category,
           stock: product.stock,
           isTrending: product.isTrending,

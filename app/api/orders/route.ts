@@ -6,6 +6,7 @@ import { authOptions } from "@/lib/auth";
 import { sendOrderNotificationEmail, sendOrderConfirmationEmail } from "@/lib/resend"
 import Setting from "@/models/Setting"
 import Product from "@/models/Product"
+import { getProductPrice } from "@/lib/product-pricing"
 import { z } from "zod"
 
 const createOrderSchema = z.object({
@@ -51,7 +52,7 @@ export async function POST(request: NextRequest) {
 
     const productIds = [...new Set(requestedProducts.map((item) => item.productId))];
     const catalogProducts = await Product.find({ _id: { $in: productIds } })
-      .select("_id title price images category")
+      .select("_id title price discountPrice images category")
       .lean();
     const productsById = new Map(
       catalogProducts.map((product) => [product._id.toString(), product])
@@ -70,7 +71,7 @@ export async function POST(request: NextRequest) {
       products.push({
         productId: product._id,
         title: product.title,
-        price: product.price,
+        price: getProductPrice(product),
         image: product.images?.[0] || "",
         category: product.category,
         quantity: item.quantity,

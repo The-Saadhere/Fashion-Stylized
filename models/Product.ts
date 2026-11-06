@@ -6,6 +6,7 @@ export interface IProduct {
     title: string;
     description: string;
     price: number;
+    discountPrice?: number | null;
     keyFeatures: string[];
     images: string[];
     _id?: mongoose.Types.ObjectId;
@@ -24,6 +25,7 @@ const productSchema = new mongoose.Schema<IProduct>({
     title: { type: String, required: true},
     description: { type: String, required: true},
     price: {type: Number, required: true},
+    discountPrice: { type: Number, default: null, min: 0 },
     keyFeatures: [{type: String}],
     images: [{type: String}],
     stock: {type: Number, default: 5},
