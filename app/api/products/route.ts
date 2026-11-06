@@ -52,13 +52,15 @@ export async function POST(request: NextRequest) {
 
     await connectToDatabase()
 
-    const { title, description, price, images, keyFeatures, category, isTrending, colors , stock} = await request.json()
+    const { title, description, price, discountPrice, images, keyFeatures, category, isTrending, colors , stock} = await request.json()
 
-    if (!title || !description || !price || !category) {
+    if (!title || !description || !category || typeof price !== "number" || !Number.isFinite(price) || price <= 0) {
       return NextResponse.json({ success: false, error: "Missing required fields" }, { status: 400 })
     }
 
-    
+    if (discountPrice != null && (typeof discountPrice !== "number" || !Number.isFinite(discountPrice) || discountPrice <= 0 || discountPrice >= price)) {
+      return NextResponse.json({ success: false, error: "Discount price must be greater than 0 and less than the regular price" }, { status: 400 })
+    }
 
     if (images.length === 0) {
       return NextResponse.json({ success: false, error: "At least one image is required" }, { status: 400 })
@@ -68,6 +70,7 @@ export async function POST(request: NextRequest) {
       title,
       description,
       price,
+      discountPrice: discountPrice ?? null,
       images: images,
       keyFeatures,
       category,
@@ -103,10 +106,14 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ success: false, error: "Product ID is required" }, { status: 400 })
     }
 
-    const { title, description, price, images, keyFeatures, category, isTrending, colors, stock, expire, token, signature } = await request.json()
+    const { title, description, price, discountPrice, images, keyFeatures, category, isTrending, colors, stock } = await request.json()
 
-    if (!title || !description || !price || !category) {
+    if (!title || !description || !category || typeof price !== "number" || !Number.isFinite(price) || price <= 0) {
       return NextResponse.json({ success: false, error: "Missing required fields" }, { status: 400 })
+    }
+
+    if (discountPrice != null && (typeof discountPrice !== "number" || !Number.isFinite(discountPrice) || discountPrice <= 0 || discountPrice >= price)) {
+      return NextResponse.json({ success: false, error: "Discount price must be greater than 0 and less than the regular price" }, { status: 400 })
     }
 
     // base update fields
@@ -114,6 +121,7 @@ export async function PUT(request: NextRequest) {
       title,
       description,
       price,
+      discountPrice: discountPrice ?? null,
       keyFeatures,
       category,
       isTrending,

@@ -188,6 +188,7 @@ async createProduct(data: {
   title: string
   description: string
   price: number
+  discountPrice: number | null
   category: string
   stock: number
   isTrending: boolean
@@ -205,6 +206,7 @@ async updateProduct(id: string, data: {
   title: string
   description: string
   price: number
+  discountPrice: number | null
   category: string
   stock: number
   isTrending: boolean

@@ -12,6 +12,7 @@ type ProductData = {
   title: string
   description: string
   price: number | ""
+  discountPrice: number | ""
   category: string
   stock: number | ""
   isTrending: boolean
@@ -29,6 +30,7 @@ const defaultData: ProductData = {
   title: "",
   description: "",
   price: "",
+  discountPrice: "",
   category: "watches",
   stock: "",
   isTrending: false,
@@ -100,6 +102,10 @@ export default function ProductForm({ initialData, mode }: Props) {
     if (!form.title.trim()) return "Title is required"
     if (!form.description.trim()) return "Description is required"
     if (!form.price || Number(form.price) <= 0) return "Valid price is required"
+    if (form.discountPrice !== "" && (
+      Number(form.discountPrice) <= 0 ||
+      Number(form.discountPrice) >= Number(form.price)
+    )) return "Discount price must be greater than 0 and less than the regular price"
     if (!form.category) return "Category is required"
     if (form.stock === "" || Number(form.stock) < 0) return "Valid stock is required"
     if (form.images.length === 0) return "At least one image is required"
@@ -122,6 +128,7 @@ export default function ProductForm({ initialData, mode }: Props) {
         title: form.title.trim(),
         description: form.description.trim(),
         price: Number(form.price),
+        discountPrice: form.discountPrice === "" ? null : Number(form.discountPrice),
         category: form.category,
         stock: Number(form.stock),
         isTrending: form.isTrending,
@@ -215,11 +222,11 @@ export default function ProductForm({ initialData, mode }: Props) {
             />
           </motion.div>
 
-          {/* price + stock */}
+          {/* regular price + discount price */}
           <motion.div variants={fadeUp} className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-sm uppercase tracking-wider mb-2">
-                Price (Rs.) <span className="text-red-400">*</span>
+                Regular Price (Rs.) <span className="text-red-400">*</span>
               </label>
               <input
                 name="price"
@@ -231,6 +238,24 @@ export default function ProductForm({ initialData, mode }: Props) {
                 className="w-full px-4 py-3 bg-transparent border border-(--border) focus:border-(--primary) outline-none text-sm transition-colors placeholder:text-(--muted-foreground)"
               />
             </div>
+            <div>
+              <label className="block text-sm uppercase tracking-wider mb-2">
+                Discount Price (Rs.)
+              </label>
+              <input
+                name="discountPrice"
+                type="number"
+                value={form.discountPrice}
+                onChange={handleChange}
+                placeholder="Optional"
+                min={0}
+                className="w-full px-4 py-3 bg-transparent border border-(--border) focus:border-(--primary) outline-none text-sm transition-colors placeholder:text-(--muted-foreground)"
+              />
+            </div>
+          </motion.div>
+
+          {/* stock */}
+          <motion.div variants={fadeUp}>
             <div>
               <label className="block text-sm uppercase tracking-wider mb-2">
                 Stock <span className="text-red-400">*</span>

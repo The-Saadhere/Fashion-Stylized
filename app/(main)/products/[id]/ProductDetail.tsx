@@ -12,7 +12,7 @@ import { useBuyNowStore } from '@/app/store/buyNowStore'
 import { useRouter } from 'next/navigation'
 import { useSession } from 'next-auth/react'
 import { useWishlistStore } from '@/app/store/wishlistStore'
-import { getProductOffer } from '@/lib/product-offers'
+import { getProductDiscountPercent, getProductPrice, hasProductDiscount } from '@/lib/product-pricing'
 import { showToast } from "@/lib/toast"
 import ReviewList from '@/app/components/ReviewList'
 import { ProductColor } from '@/models/Product'
@@ -123,7 +123,7 @@ const handleWishlist = async () => {
         addWishlistItem({
           id: product._id?.toString() || "",
           title: product.title,
-          price: product.price,
+          price: getProductPrice(product),
           image: product.images?.[0] || "",
           category: product.category,
         })
@@ -143,7 +143,7 @@ const handleWishlist = async () => {
     addItem({
       id: product._id?.toString() || '',
       title: product.title,
-      price: product.price,
+      price: getProductPrice(product),
       image: product.images?.[0] || "",
       category: product.category,
       quantity,
@@ -173,7 +173,7 @@ const handleWishlist = async () => {
       setItem({
         id: product._id?.toString() || '',
     title: product.title,
-    price: product.price,
+    price: getProductPrice(product),
     image: product.images?.[0] || "",
     category: product.category,
     quantity,
@@ -195,7 +195,7 @@ const handleWishlist = async () => {
           content_name: product.title,
         },
       ],
-      value: product.price,
+      value: getProductPrice(product),
       currency: "PKR",
     })
   }
@@ -263,7 +263,8 @@ const handleWishlist = async () => {
 
   if (!product) return null
 
-  const offer = getProductOffer(product)
+  const displayPrice = getProductPrice(product)
+  const hasDiscount = hasProductDiscount(product)
 
   return (
     <>
@@ -424,22 +425,25 @@ const handleWishlist = async () => {
               <p className="text-xs uppercase tracking-widest text-(--muted-foreground) mb-2">
                 {product.category}
               </p>
+              <p className="mb-3 inline-flex border border-[#d4af37]/60 bg-[#d4af37]/10 px-3 py-1 text-xs font-medium uppercase tracking-[0.18em] text-[#d4af37]">
+                11.11 Sale · Up to 15% Off
+              </p>
               <h1 className="text-4xl lg:text-5xl mb-4 font-cormorant-garamond leading-tight">
                 {product.title}
               </h1>
               <div className='flex flex-wrap items-center gap-3 mb-2'>
                 <p className='text-3xl text-(--primary)'>
-                  Rs. {offer.showOffer ? offer.displayPrice.toLocaleString() : product.price.toLocaleString()}
+                  Rs. {displayPrice.toLocaleString()}
                 </p>
-                {offer.showOffer && (
+                {hasDiscount && (
                   <p className='text-sm text-(--muted-foreground) line-through'>
-                    Rs. {offer.originalPrice.toLocaleString()}
+                    Rs. {product.price.toLocaleString()}
                   </p>
                 )}
               </div>
-              {offer.showOffer && (
+              {hasDiscount && (
                 <p className='text-sm text-amber-500 mb-3'>
-                  {offer.discountPercent}% off • {offer.label}
+                  {getProductDiscountPercent(product)}% off • Limited offer
                 </p>
               )}
 
@@ -750,18 +754,18 @@ const handleWishlist = async () => {
                       {item.title}
                     </h3>
                     <div className="flex items-center gap-2 flex-wrap">
-                      {getProductOffer(item).showOffer ? (
+                      {hasProductDiscount(item) ? (
                         <>
                           <p className="text-(--primary) tracking-wider text-sm">
-                            Rs {getProductOffer(item).displayPrice.toLocaleString()}
+                            Rs {getProductPrice(item).toLocaleString()}
                           </p>
                           <p className="text-xs text-(--muted-foreground) line-through">
-                            Rs {getProductOffer(item).originalPrice.toLocaleString()}
+                            Rs {item.price.toLocaleString()}
                           </p>
                         </>
                       ) : (
                         <p className="text-(--primary) tracking-wider text-sm">
-                          Rs {item.price.toLocaleString()}
+                          Rs {getProductPrice(item).toLocaleString()}
                         </p>
                       )}
                     </div>

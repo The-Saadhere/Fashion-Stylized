@@ -4,7 +4,6 @@ import { motion } from "framer-motion"
 import Link from "next/link";
 import { Image } from '@imagekit/next'
 
-
 const fadeUp = {
   hidden: { opacity: 0, y: 40 },
   show: { opacity: 1, y: 0 }

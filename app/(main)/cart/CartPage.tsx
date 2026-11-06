@@ -7,6 +7,7 @@ import { Image } from "@imagekit/next";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import { apiClient } from "@/lib/api-client";
+import { getProductPrice } from "@/lib/product-pricing"
 import { useSession } from "next-auth/react";
 
 import CheckoutAuthModal from "@/app/components/checkout/CheckoutAuthModal";
@@ -103,13 +104,14 @@ useEffect(() => {
             foundIssues = true
           }
 
-          if (liveProduct.price !== item.price) {
+          const livePrice = getProductPrice(liveProduct)
+          if (livePrice !== item.price) {
             validation.priceChanged = true
             validation.oldPrice = item.price
             foundIssues = true
             useCartStore.setState(state => {
               const updatedItems = state.items.map(i =>
-                i.id === item.id && i.color === item.color ? { ...i, price: liveProduct.price } : i
+                i.id === item.id && i.color === item.color ? { ...i, price: livePrice } : i
               )
               return {
                 items: updatedItems,

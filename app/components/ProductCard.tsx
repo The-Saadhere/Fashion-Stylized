@@ -7,7 +7,7 @@ import { Eye, ShoppingBag, Star } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { IProduct } from '@/models/Product'
 import { useCartStore } from '@/app/store/cartStore'
-import { getProductOffer } from '@/lib/product-offers'
+import { getProductPrice, hasProductDiscount } from '@/lib/product-pricing'
 import { showToast } from "@/lib/toast"
 
 
@@ -19,7 +19,8 @@ interface ProductCardProps {
 
 const ProductCard = ({ item, index = 0, className = '' }: ProductCardProps) => {
   const { addItem } = useCartStore()
-  const offer = getProductOffer(item)
+  const displayPrice = getProductPrice(item)
+  const hasDiscount = hasProductDiscount(item)
   const href = item._id ? `/products/${item._id.toString()}` : '/products'
 
   const avgRating = (item as any).avgRating || 0
@@ -30,7 +31,7 @@ const ProductCard = ({ item, index = 0, className = '' }: ProductCardProps) => {
     addItem({
       id: item._id?.toString() || '',
       title: item.title,
-      price: item.price,
+      price: displayPrice,
       image: item.images?.[0] || '/home.jpg',
       category: item.category,
       quantity: 1,
@@ -91,7 +92,7 @@ const ProductCard = ({ item, index = 0, className = '' }: ProductCardProps) => {
             </div>
           )}
 
-          {offer.showOffer && (
+          {hasDiscount && (
             <div className="absolute top-3 left-3 bg-amber-500/95 text-black text-[10px] uppercase tracking-wider px-2.5 py-1">
               Limited offer
             </div>
@@ -136,18 +137,18 @@ const ProductCard = ({ item, index = 0, className = '' }: ProductCardProps) => {
           )}
 
           <div className="flex items-center gap-2 flex-wrap pt-0.5">
-            {offer.showOffer ? (
+            {hasDiscount ? (
               <>
                 <p className="text-(--primary) tracking-wider text-sm">
-                  Rs {offer.displayPrice.toLocaleString()}
+                  Rs {displayPrice.toLocaleString()}
                 </p>
                 <p className="text-xs text-(--muted-foreground) line-through">
-                  Rs {offer.originalPrice.toLocaleString()}
+                  Rs {item.price.toLocaleString()}
                 </p>
               </>
             ) : (
               <p className="text-(--primary) tracking-wider text-sm">
-                Rs {item.price.toLocaleString()}
+                Rs {displayPrice.toLocaleString()}
               </p>
             )}
           </div>
