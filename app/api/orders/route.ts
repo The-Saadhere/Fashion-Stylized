@@ -7,7 +7,9 @@ import { sendOrderNotificationEmail, sendOrderConfirmationEmail } from "@/lib/re
 import Setting from "@/models/Setting"
 import Product from "@/models/Product"
 import { getProductPrice } from "@/lib/product-pricing"
+import { sendMetaPurchaseEvent } from "@/lib/metaEventApi"
 import { z } from "zod"
+import type { IOrderProduct } from "@/models/Order"
 
 const createOrderSchema = z.object({
   name: z.string().trim().min(1),
@@ -58,7 +60,7 @@ export async function POST(request: NextRequest) {
       catalogProducts.map((product) => [product._id.toString(), product])
     );
 
-    const products = [];
+    const products: IOrderProduct[] = [];
     for (const item of requestedProducts) {
       const product = productsById.get(item.productId.toLowerCase());
       if (!product) {
@@ -109,9 +111,31 @@ export async function POST(request: NextRequest) {
     });
 
     const savedOrder = await newOrder.save();
+    const orderId = savedOrder._id.toString();
+
+    try {
+      await sendMetaPurchaseEvent(request, {
+        id: orderId,
+        email: savedOrder.email,
+        mobileNumber: savedOrder.mobileNumber,
+        totalAmount: savedOrder.totalAmount,
+        createdAt: savedOrder.createdAt,
+        products,
+      });
+      console.info("[Meta CAPI] Purchase sent", {
+        eventId: `${orderId}_purchase`,
+        value: savedOrder.totalAmount,
+        currency: "PKR",
+      });
+    } catch (error) {
+      console.error("[Meta CAPI] Failed to send Purchase", {
+        eventId: `${orderId}_purchase`,
+        error,
+      });
+    }
 
       sendOrderNotificationEmail({
-      orderId: savedOrder._id.toString(),
+      orderId,
       customerName: name,
       customerEmail: email,
       mobileNumber,
@@ -131,7 +155,7 @@ export async function POST(request: NextRequest) {
     sendOrderConfirmationEmail({
       customerName: name,
       customerEmail: email,
-      orderId: savedOrder._id.toString(),
+      orderId,
       products: products.map((p) => ({
         title: p.title,
         quantity: p.quantity,
@@ -149,7 +173,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       success: true,
       message: "Order placed successfully",
-      orderId: savedOrder._id,
+      orderId,
     }, { status: 201 });
 
   } catch (error) {

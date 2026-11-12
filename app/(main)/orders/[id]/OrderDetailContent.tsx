@@ -47,13 +47,16 @@ useEffect(() => {
 
   const orderId = order._id.toString()
   const storageKey = `pixel_tracked_${orderId}`
+  const eventId = `${orderId}_purchase`
 
-  if (trackedRef.current || sessionStorage.getItem(storageKey)) return
+  if (trackedRef.current || sessionStorage.getItem(storageKey)) {
+    console.info("[Meta Pixel] Purchase suppressed: already tracked", { eventId })
+    return
+  }
 
   trackedRef.current = true
   sessionStorage.setItem(storageKey, "1")
 
-  const eventId = orderId
   const contents = order.products.map((item) => ({
     content_id: item.productId?.toString() || item.title,
     content_type: "product" as const,
@@ -80,7 +83,9 @@ useEffect(() => {
       content_ids: contents.map(c => c.content_id),
       content_type: 'product',
       num_items: order.products.reduce((sum, p) => sum + p.quantity, 0),
-    }, { eventID: `${eventId}_purchase` }) // event_id for CAPI dedup, note fbq uses "eventID" not "event_id"
+    }, { eventID: eventId }) // event_id for CAPI dedup, note fbq uses "eventID" not "event_id"
+  } else {
+    console.warn("[Meta Pixel] Purchase not sent: fbq is unavailable", { eventId })
   }
 
   apiClient.trackTikTokEvent({
