@@ -5,15 +5,10 @@ import { useParams, useRouter } from "next/navigation"
 import { motion } from "framer-motion"
 import { CheckCircle2, Package, MapPin, Phone, Mail, ArrowRight, Loader2 } from "lucide-react"
 import { apiClient } from "@/lib/api-client"
+import { getMetaPurchaseEventId } from "@/lib/metaEventIds"
 import Link from "next/link"
 import { Image } from "@imagekit/next"
 import { IOrder } from "@/models/Order"
-
-declare global {
-  interface Window {
-    ttq: any;
-  }
-}
 
 export default function OrderDetailContent() {
   const { id } = useParams()
@@ -47,7 +42,7 @@ useEffect(() => {
 
   const orderId = order._id.toString()
   const storageKey = `pixel_tracked_${orderId}`
-  const eventId = `${orderId}_purchase`
+  const eventId = getMetaPurchaseEventId(orderId)
 
   if (trackedRef.current || sessionStorage.getItem(storageKey)) {
     console.info("[Meta Pixel] Purchase suppressed: already tracked", { eventId })
@@ -75,9 +70,8 @@ useEffect(() => {
   }
 
   // ✅ Facebook Pixel Purchase
-  const w = window as any
-  if (typeof window !== "undefined" && w.fbq) {
-    w.fbq('track', 'Purchase', {
+  if (typeof window !== "undefined" && window.fbq) {
+    window.fbq('track', 'Purchase', {
       value: order.totalAmount,
       currency: 'PKR',
       content_ids: contents.map(c => c.content_id),
