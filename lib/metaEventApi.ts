@@ -1,5 +1,6 @@
 import { createHash } from "node:crypto";
 import type { NextRequest } from "next/server";
+import { getMetaPurchaseEventId } from "@/lib/metaEventIds";
 
 type MetaPurchaseOrder = {
   id: string;
@@ -31,7 +32,7 @@ export async function sendMetaPurchaseEvent(
     );
   }
 
-  const eventId = `${order.id}_purchase`;
+  const eventId = getMetaPurchaseEventId(order.id);
   const forwardedIp = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim();
   const phoneDigits = order.mobileNumber.replace(/\D/g, "");
   const phone = phoneDigits.startsWith("0")

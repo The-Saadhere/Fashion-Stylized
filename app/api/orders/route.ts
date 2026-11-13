@@ -8,6 +8,7 @@ import Setting from "@/models/Setting"
 import Product from "@/models/Product"
 import { getProductPrice } from "@/lib/product-pricing"
 import { sendMetaPurchaseEvent } from "@/lib/metaEventApi"
+import { getMetaPurchaseEventId } from "@/lib/metaEventIds"
 import { z } from "zod"
 import type { IOrderProduct } from "@/models/Order"
 
@@ -123,13 +124,13 @@ export async function POST(request: NextRequest) {
         products,
       });
       console.info("[Meta CAPI] Purchase sent", {
-        eventId: `${orderId}_purchase`,
+        eventId: getMetaPurchaseEventId(orderId),
         value: savedOrder.totalAmount,
         currency: "PKR",
       });
     } catch (error) {
       console.error("[Meta CAPI] Failed to send Purchase", {
-        eventId: `${orderId}_purchase`,
+        eventId: getMetaPurchaseEventId(orderId),
         error,
       });
     }

@@ -124,7 +124,7 @@ export default function RootLayout({
         </AuthProvider>
           <Script
           id="meta-pixel"
-          strategy="afterInteractive"
+          strategy="beforeInteractive"
         >
           {`
             !function(f,b,e,v,n,t,s)
