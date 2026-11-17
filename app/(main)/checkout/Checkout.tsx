@@ -200,6 +200,7 @@ const handleSubmit = async () => {
   }
 
   setLoading(true)
+  let orderCreated = false
 
   try {
     const res = await apiClient.createOrder({
@@ -226,6 +227,7 @@ const handleSubmit = async () => {
       return
     }
 
+    orderCreated = true
     // ✅ no Purchase event here — it fires on the confirmation page instead
 
     if (isBuyNow) {
@@ -244,7 +246,7 @@ const handleSubmit = async () => {
     setError("Something went wrong. Please try again.")
   } finally {
     setLoading(false)
-    isSubmittingRef.current = false
+    if (!orderCreated) isSubmittingRef.current = false
   }
 }
 
@@ -550,12 +552,17 @@ useEffect(() => {
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
               onClick={handleSubmit}
-              disabled={loading}
+              disabled={loading || orderSuccess}
               className="w-full py-4 bg-(--primary) text-(--primary-foreground) uppercase tracking-widest flex items-center justify-center gap-2 hover:opacity-90 transition-opacity disabled:opacity-60 disabled:cursor-not-allowed text-sm">
               {loading ? (
                 <>
                   <Loader2 className="w-4 h-4 animate-spin" />
                   Placing Order...
+                </>
+              ) : orderSuccess ? (
+                <>
+                  <CheckCircle2 className="w-4 h-4" />
+                  Order Placed
                 </>
               ) : "Place Order"}
             </motion.button>
