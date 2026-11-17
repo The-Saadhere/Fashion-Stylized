@@ -14,6 +14,11 @@ type FetchOptions = {
   category: string
 }
 
+type AdminOrder = Omit<IOrder, "_id" | "createdAt"> & {
+  _id: string
+  createdAt: string
+}
+
 
 
 class APIClient {
@@ -167,8 +172,41 @@ async deleteAccount() {
     method: "DELETE"
   })
 }
-async adminGetOrders() {
-  return this.fetch<{ success: boolean; data: any[]; error?: string }>("/admin/orders")
+async adminGetOrders(params: { page?: number; limit?: number; status?: string } = {}) {
+  const query = new URLSearchParams()
+  if (params.page !== undefined) query.set("page", String(params.page))
+  if (params.limit !== undefined) query.set("limit", String(params.limit))
+  if (params.status) query.set("status", params.status)
+  return this.fetch<{
+    success: boolean
+    data: AdminOrder[]
+    total: number
+    page: number
+    limit: number
+    hasMore: boolean
+    error?: string
+  }>(`/admin/orders?${query.toString()}`)
+}
+
+async adminSearchOrders(params: {
+  query: string
+  page?: number
+  limit?: number
+  status?: string
+}) {
+  const query = new URLSearchParams({ query: params.query })
+  if (params.page !== undefined) query.set("page", String(params.page))
+  if (params.limit !== undefined) query.set("limit", String(params.limit))
+  if (params.status) query.set("status", params.status)
+  return this.fetch<{
+    success: boolean
+    data: AdminOrder[]
+    total: number
+    page: number
+    limit: number
+    hasMore: boolean
+    error?: string
+  }>(`/admin/orders/search?${query.toString()}`)
 }
 
 async updateOrderStatus(orderId: string, status: string) {

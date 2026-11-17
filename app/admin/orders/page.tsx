@@ -1,8 +1,8 @@
 // app/admin/orders/page.tsx
 "use client"
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { motion, AnimatePresence } from "framer-motion"
-import { Search, Filter, Eye, ChevronDown, Loader2, AlertCircle, RefreshCw } from "lucide-react"
+import { Search, Eye, ChevronDown, Loader2, AlertCircle, RefreshCw } from "lucide-react"
 import Link from "next/link"
 import { apiClient } from "@/lib/api-client"
 
@@ -31,56 +31,103 @@ const allStatuses = ["All", "Pending", "Processing", "Shipped", "Delivered", "Ca
 
 export default function AdminOrdersPage() {
   const [orders, setOrders] = useState<Order[]>([])
-  const [filtered, setFiltered] = useState<Order[]>([])
   const [loading, setLoading] = useState(true)
+  const [loadingMore, setLoadingMore] = useState(false)
   const [error, setError] = useState("")
   const [search, setSearch] = useState("")
+  const [appliedSearch, setAppliedSearch] = useState("")
   const [activeStatus, setActiveStatus] = useState("All")
+  const [totalOrders, setTotalOrders] = useState(0)
+  const [page, setPage] = useState(1)
+  const [hasMore, setHasMore] = useState(false)
+  const [refreshKey, setRefreshKey] = useState(0)
   const [updatingId, setUpdatingId] = useState<string | null>(null)
   const [openDropdown, setOpenDropdown] = useState<string | null>(null)
+  const requestGeneration = useRef(0)
 
-  const fetchOrders = async () => {
-    try {
+  useEffect(() => {
+    const generation = ++requestGeneration.current
+
+    const fetchFirstPage = async () => {
       setLoading(true)
+      setLoadingMore(false)
       setError("")
-      const res = await apiClient.adminGetOrders()
-      if (res.success) {
+      try {
+        const params = {
+          page: 1,
+          limit: 20,
+          ...(activeStatus !== "All" ? { status: activeStatus.toLowerCase() } : {}),
+        }
+        const res = appliedSearch
+          ? await apiClient.adminSearchOrders({ ...params, query: appliedSearch })
+          : await apiClient.adminGetOrders(params)
+
+        if (generation !== requestGeneration.current) return
+        if (!res.success) {
+          setOrders([])
+          setTotalOrders(0)
+          setHasMore(false)
+          setError(res.error || "Failed to fetch orders")
+          return
+        }
+
         setOrders(res.data || [])
-        setFiltered(res.data || [])
-      } else {
-        setError(res.error || "Failed to fetch orders")
+        setTotalOrders(res.total)
+        setPage(res.page)
+        setHasMore(res.hasMore)
+      } catch {
+        if (generation === requestGeneration.current) {
+          setOrders([])
+          setTotalOrders(0)
+          setHasMore(false)
+          setError("Something went wrong")
+        }
+      } finally {
+        if (generation === requestGeneration.current) setLoading(false)
       }
+    }
+
+    fetchFirstPage()
+    return () => {
+      requestGeneration.current += 1
+    }
+  }, [activeStatus, appliedSearch, refreshKey])
+
+  const loadMoreOrders = async () => {
+    const generation = requestGeneration.current
+    setLoadingMore(true)
+    setError("")
+    try {
+      const params = {
+        page: page + 1,
+        limit: 20,
+        ...(activeStatus !== "All" ? { status: activeStatus.toLowerCase() } : {}),
+      }
+      const res = appliedSearch
+        ? await apiClient.adminSearchOrders({ ...params, query: appliedSearch })
+        : await apiClient.adminGetOrders(params)
+
+      if (generation !== requestGeneration.current) return
+      if (!res.success) {
+        setError(res.error || "Failed to fetch more orders")
+        return
+      }
+
+      setOrders(prev => [...prev, ...(res.data || [])])
+      setTotalOrders(res.total)
+      setPage(res.page)
+      setHasMore(res.hasMore)
     } catch {
-      setError("Something went wrong")
+      if (generation === requestGeneration.current) setError("Something went wrong")
     } finally {
-      setLoading(false)
+      if (generation === requestGeneration.current) setLoadingMore(false)
     }
   }
 
-  useEffect(() => {
-    fetchOrders()
-  }, [])
-
-  // filter + search
-  useEffect(() => {
-    let result = [...orders]
-
-    if (activeStatus !== "All") {
-      result = result.filter(o =>
-        o.status.toLowerCase() === activeStatus.toLowerCase()
-      )
-    }
-
-    if (search.trim()) {
-      result = result.filter(o =>
-        o._id.toLowerCase().includes(search.toLowerCase()) ||
-        o.name.toLowerCase().includes(search.toLowerCase()) ||
-        o.email.toLowerCase().includes(search.toLowerCase())
-      )
-    }
-
-    setFiltered(result)
-  }, [orders, activeStatus, search])
+  const submitSearch = () => {
+    setAppliedSearch(search.trim())
+    setRefreshKey(key => key + 1)
+  }
 
   const handleStatusUpdate = async (orderId: string, newStatus: string) => {
     setUpdatingId(orderId)
@@ -88,9 +135,19 @@ export default function AdminOrdersPage() {
     try {
       const res = await apiClient.updateOrderStatus(orderId, newStatus)
       if (res.success) {
-        setOrders(prev => prev.map(o =>
-          o._id === orderId ? { ...o, status: newStatus as Order["status"] } : o
-        ))
+        const shouldRemoveFromStatusFilter = activeStatus !== "All" &&
+          activeStatus.toLowerCase() !== newStatus.toLowerCase()
+        setOrders(prev => prev.flatMap(order => {
+          if (order._id !== orderId) return [order]
+          return shouldRemoveFromStatusFilter
+            ? []
+            : [{ ...order, status: newStatus as Order["status"] }]
+        }))
+        if (shouldRemoveFromStatusFilter) {
+          const updatedTotal = Math.max(0, totalOrders - 1)
+          setTotalOrders(updatedTotal)
+          setHasMore(page * 20 < updatedTotal)
+        }
       }
     } catch {
       console.error("Failed to update status")
@@ -120,13 +177,13 @@ export default function AdminOrdersPage() {
         <div>
           <h1 className="text-3xl font-cormorant-garamond">Orders</h1>
           <p className="text-sm text-(--muted-foreground) mt-1">
-            {orders.length} total orders
+            {totalOrders} total orders
           </p>
         </div>
         <motion.button
           whileHover={{ scale: 1.03 }}
           whileTap={{ scale: 0.97 }}
-          onClick={fetchOrders}
+          onClick={() => setRefreshKey(key => key + 1)}
           className="flex items-center gap-2 px-4 py-2 border border-(--border) hover:border-(--primary) text-sm uppercase tracking-wider transition-colors">
           <RefreshCw className="w-4 h-4" />
           Refresh
@@ -152,9 +209,23 @@ export default function AdminOrdersPage() {
             placeholder="Search by order ID, name or email..."
             value={search}
             onChange={e => setSearch(e.target.value)}
+            onKeyDown={e => {
+              if (e.key === "Enter") {
+                e.preventDefault()
+                submitSearch()
+              }
+            }}
             className="w-full pl-10 pr-4 py-2.5 bg-transparent border border-(--border) focus:border-(--primary) outline-none text-sm transition-colors placeholder:text-(--muted-foreground)"
           />
         </div>
+        <motion.button
+          whileHover={{ scale: 1.03 }}
+          whileTap={{ scale: 0.97 }}
+          onClick={submitSearch}
+          className="flex items-center justify-center gap-2 px-4 py-2.5 border border-(--border) hover:border-(--primary) text-sm uppercase tracking-wider transition-colors">
+          <Search className="w-4 h-4" />
+          Search
+        </motion.button>
 
         {/* status filter */}
         <div className="flex flex-wrap gap-2">
@@ -175,11 +246,11 @@ export default function AdminOrdersPage() {
 
       {/* results count */}
       <p className="text-xs text-(--muted-foreground) uppercase tracking-wider">
-        Showing {filtered.length} of {orders.length} orders
+        Showing {orders.length} of {totalOrders} orders
       </p>
 
       {/* empty */}
-      {filtered.length === 0 && !loading && (
+      {orders.length === 0 && !loading && (
         <div className="flex flex-col items-center justify-center py-24 gap-3 text-center">
           <p className="text-2xl font-cormorant-garamond">No orders found</p>
           <p className="text-sm text-(--muted-foreground)">Try a different filter or search</p>
@@ -187,7 +258,7 @@ export default function AdminOrdersPage() {
       )}
 
       {/* orders table — desktop */}
-      {filtered.length > 0 && (
+      {orders.length > 0 && (
         <>
           {/* desktop table */}
           <div className="hidden lg:block border border-(--border) overflow-hidden">
@@ -203,7 +274,7 @@ export default function AdminOrdersPage() {
               </thead>
               <tbody>
                 <AnimatePresence>
-                  {filtered.map((order, index) => (
+                  {orders.map((order, index) => (
                     <motion.tr
                       key={order._id}
                       initial={{ opacity: 0 }}
@@ -318,7 +389,7 @@ export default function AdminOrdersPage() {
 
           {/* mobile cards */}
           <div className="lg:hidden space-y-3">
-            {filtered.map((order, index) => (
+            {orders.map((order, index) => (
               <motion.div
                 key={order._id}
                 initial={{ opacity: 0, y: 10 }}
@@ -381,6 +452,20 @@ export default function AdminOrdersPage() {
             ))}
           </div>
         </>
+      )}
+
+      {hasMore && (
+        <div className="flex justify-center">
+          <motion.button
+            whileHover={{ scale: 1.03 }}
+            whileTap={{ scale: 0.97 }}
+            onClick={loadMoreOrders}
+            disabled={loadingMore}
+            className="flex items-center gap-2 px-6 py-3 border border-(--border) hover:border-(--primary) text-sm uppercase tracking-wider transition-colors disabled:opacity-50">
+            {loadingMore ? <Loader2 className="w-4 h-4 animate-spin" /> : <ChevronDown className="w-4 h-4" />}
+            {loadingMore ? "Loading..." : "Show more orders"}
+          </motion.button>
+        </div>
       )}
     </div>
   )
